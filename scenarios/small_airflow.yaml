@@ -1,0 +1,50 @@
+# First thermodynamic model for HeiQ-Thermodynamical-Analysis
+# Units:
+#   T_C: degree Celsius
+#   RH: fraction, not percent; 0.80 means 80% RH
+#   dry_air_mass_flow_kg_s: kg dry air per second
+#   e_p_Wh_per_kg_water: electrical Wh per kg water removed by EO/ACEO
+
+pressure_pa: 101325
+
+air:
+  dry_air_mass_flow_kg_s: 0.1
+
+start:
+  T_C: 30.0
+  RH: 0.80
+
+target:
+  T_C: 22.0
+  RH: 0.50
+
+eo:
+  fraction_latent_by_eo_grid:
+    start: 0.0
+    stop: 1.0
+    n: 51
+
+  e_p_Wh_per_kg_water_grid:
+    start: 25.0
+    stop: 1000.0
+    n: 80
+
+  heat_to_process_fraction_grid: [0.0, 0.25, 0.50, 0.75, 1.0]
+
+coil:
+  condenser_T_C: 40.0
+  eta_carnot: 0.45
+  evap_approach_C: 5.0
+  reheat_COP: 1.0
+
+  # First-pass hypothesis: as EO/ACEO removes more latent load, the coil can
+  # operate at higher effective evaporating temperature.
+  # Alternatives implemented:
+  #   linear_by_fraction
+  #   strict_dewpoint_until_full
+  hybrid_evap_model: linear_by_fraction
+
+plots:
+  example_e_p_Wh_per_kg_water: 300.0
+  example_heat_to_process_fraction: 0.25
+  savings_map_heat_fractions: [0.0, 0.50, 1.0]
