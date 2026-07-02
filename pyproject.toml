@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "heiq-thermo"
+version = "0.1.0"
+description = "Thermodynamic and psychrometric analysis tools for electroosmotic/ACEO-assisted dehumidification."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "HeiQ Thermodynamical Analysis Team"}]
+dependencies = [
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "matplotlib>=3.7",
+  "PyYAML>=6.0"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+heiq-thermo = "heiq_thermo.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
