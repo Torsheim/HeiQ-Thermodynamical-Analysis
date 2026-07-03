@@ -1,0 +1,58 @@
+# Climate / application scenarios for Model 2 scenario sweep.
+# RH is a fraction, not percent.
+# These are not final design climates; they are first-pass screening cases.
+
+scenarios:
+  hot_humid_design:
+    description: "Original design case: hot and humid inlet, comfort target."
+    start:
+      T_C: 30.0
+      RH: 0.80
+    target:
+      T_C: 22.0
+      RH: 0.50
+
+  warm_humid:
+    description: "Milder warm-humid case."
+    start:
+      T_C: 27.0
+      RH: 0.70
+    target:
+      T_C: 22.0
+      RH: 0.50
+
+  tropical_supply:
+    description: "Tropical inlet with warmer supply target."
+    start:
+      T_C: 32.0
+      RH: 0.75
+    target:
+      T_C: 24.0
+      RH: 0.50
+
+  very_hot_moderate_rh:
+    description: "Very hot inlet with moderate RH and 24 C target."
+    start:
+      T_C: 35.0
+      RH: 0.60
+    target:
+      T_C: 24.0
+      RH: 0.50
+
+  mild_high_rh:
+    description: "Mild but humid inlet. Latent load remains relevant, sensible load is smaller."
+    start:
+      T_C: 24.0
+      RH: 0.80
+    target:
+      T_C: 22.0
+      RH: 0.50
+
+  dehumidification_only_shoulder:
+    description: "Same dry-bulb target; mostly latent control / shoulder-season case."
+    start:
+      T_C: 22.0
+      RH: 0.80
+    target:
+      T_C: 22.0
+      RH: 0.50
