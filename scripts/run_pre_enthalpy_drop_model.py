@@ -386,39 +386,99 @@ def make_heatmaps(df: pd.DataFrame, out_dir: Path) -> None:
     plots = out_dir / "plots"
     plots.mkdir(parents=True, exist_ok=True)
 
-    for delta_h, q_sorp in sorted(set(zip(df["delta_h_pre_kJ_per_kg_da"], df["q_sorp_kJ_per_kg_water"]))):
-        sub = df[(df["delta_h_pre_kJ_per_kg_da"] == delta_h) & (df["q_sorp_kJ_per_kg_water"] == q_sorp) & (df["feasible"] == True)]
+    def _imshow_extent(xvals, yvals):
+        """Return a non-singular imshow extent, also for one-row/one-column pivots."""
+        x = np.asarray(xvals, dtype=float)
+        y = np.asarray(yvals, dtype=float)
+
+        if len(x) == 1:
+            xpad = max(abs(x[0]) * 0.05, 1.0)
+            xmin, xmax = x[0] - xpad, x[0] + xpad
+        else:
+            xs = np.sort(x)
+            dx0 = xs[1] - xs[0]
+            dx1 = xs[-1] - xs[-2]
+            xmin, xmax = xs[0] - 0.5 * dx0, xs[-1] + 0.5 * dx1
+
+        if len(y) == 1:
+            ypad = max(abs(y[0]) * 0.05, 0.02)
+            ymin, ymax = y[0] - ypad, y[0] + ypad
+        else:
+            ys = np.sort(y)
+            dy0 = ys[1] - ys[0]
+            dy1 = ys[-1] - ys[-2]
+            ymin, ymax = ys[0] - 0.5 * dy0, ys[-1] + 0.5 * dy1
+
+        return [xmin, xmax, ymin, ymax]
+
+    for delta_h, q_sorp in sorted(
+        set(zip(df["delta_h_pre_kJ_per_kg_da"], df["q_sorp_kJ_per_kg_water"]))
+    ):
+        sub = df[
+            (df["delta_h_pre_kJ_per_kg_da"] == delta_h)
+            & (df["q_sorp_kJ_per_kg_water"] == q_sorp)
+            & (df["feasible"] == True)
+        ]
+
         if sub.empty:
             continue
+
         piv = sub.pivot_table(
             index="chi_sorp_to_process_air",
             columns="e_p_Wh_per_kg_water",
             values="savings_pct",
             aggfunc="max",
         ).sort_index()
+
         if piv.empty:
             continue
 
         fig, ax = plt.subplots(figsize=(8, 5))
+
+        extent = _imshow_extent(piv.columns.values, piv.index.values)
+
         im = ax.imshow(
             piv.values,
             origin="lower",
             aspect="auto",
-            extent=[piv.columns.min(), piv.columns.max(), piv.index.min(), piv.index.max()],
+            extent=extent,
         )
         cbar = fig.colorbar(im, ax=ax)
         cbar.set_label("Best saving vs original route [%]")
-        ax.contour(
-            piv.columns.values,
-            piv.index.values,
-            piv.values,
-            levels=[0, 2, 5, 10],
-            colors="k",
-            linewidths=0.8,
-        )
+
+        # Contours require at least a 2x2 grid.
+        if piv.shape[0] >= 2 and piv.shape[1] >= 2:
+            z = np.asarray(piv.values, dtype=float)
+            finite = z[np.isfinite(z)]
+            if finite.size > 0:
+                zmin, zmax = float(np.nanmin(finite)), float(np.nanmax(finite))
+                levels = [lev for lev in [0, 2, 5, 10] if zmin <= lev <= zmax]
+                if levels:
+                    ax.contour(
+                        piv.columns.values,
+                        piv.index.values,
+                        piv.values,
+                        levels=levels,
+                        colors="k",
+                        linewidths=0.8,
+                    )
+        else:
+            ax.text(
+                0.02,
+                0.98,
+                "Contours skipped: feasible grid has only one row/column",
+                transform=ax.transAxes,
+                va="top",
+                ha="left",
+                fontsize=8,
+                bbox={"facecolor": "white", "alpha": 0.75, "edgecolor": "none"},
+            )
+
         ax.set_xlabel("EO/ACEO energy e_p [Wh/kg water]")
         ax.set_ylabel("Fraction of sorption heat to process air, chi_sorp")
-        ax.set_title(f"Pre-step saving map, Δh={delta_h:g} kJ/kg_da, q_sorp={q_sorp:g} kJ/kg")
+        ax.set_title(
+            f"Pre-step saving map, Δh={delta_h:g} kJ/kg_da, q_sorp={q_sorp:g} kJ/kg"
+        )
         fig.tight_layout()
         fig.savefig(plots / f"saving_map_dh_{delta_h:g}_qsorp_{q_sorp:g}.png", dpi=200)
         plt.close(fig)
@@ -426,22 +486,41 @@ def make_heatmaps(df: pd.DataFrame, out_dir: Path) -> None:
     # Required water removal plot for each q_sorp and delta_h, using lowest e_p if possible.
     for delta_h in sorted(df["delta_h_pre_kJ_per_kg_da"].unique()):
         fig, ax = plt.subplots(figsize=(8, 5))
+        plotted_any = False
+
         for q_sorp in sorted(df["q_sorp_kJ_per_kg_water"].unique()):
-            sub = df[(df["delta_h_pre_kJ_per_kg_da"] == delta_h) & (df["q_sorp_kJ_per_kg_water"] == q_sorp)]
+            sub = df[
+                (df["delta_h_pre_kJ_per_kg_da"] == delta_h)
+                & (df["q_sorp_kJ_per_kg_water"] == q_sorp)
+            ]
+
             if sub.empty:
                 continue
+
             ep_min = sub["e_p_Wh_per_kg_water"].min()
-            curve = sub[sub["e_p_Wh_per_kg_water"] == ep_min].groupby("chi_sorp_to_process_air")["water_removed_g_per_kg_da"].median()
+            curve = (
+                sub[sub["e_p_Wh_per_kg_water"] == ep_min]
+                .groupby("chi_sorp_to_process_air")["water_removed_g_per_kg_da"]
+                .median()
+            )
+
+            if curve.empty:
+                continue
+
             ax.plot(curve.index, curve.values, marker="o", label=f"q_sorp={q_sorp:g}, e_p={ep_min:g}")
+            plotted_any = True
+
         ax.set_xlabel("Fraction of sorption heat to process air, chi_sorp")
         ax.set_ylabel("Required water removal [g/kg dry air]")
         ax.set_title(f"Water removal needed for Δh_pre={delta_h:g} kJ/kg_da")
         ax.grid(True, alpha=0.3)
-        ax.legend()
+
+        if plotted_any:
+            ax.legend()
+
         fig.tight_layout()
         fig.savefig(plots / f"required_water_vs_chi_dh_{delta_h:g}.png", dpi=200)
         plt.close(fig)
-
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Direct model for a membrane pre-step that targets a chosen moist-air enthalpy drop before the ordinary AC route continues.")
