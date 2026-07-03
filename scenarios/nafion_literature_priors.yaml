@@ -1,0 +1,110 @@
+# Literature priors for Nafion/PFSA water uptake, water states, and transport.
+# These values are intended as first modelling priors, not final fitted parameters.
+
+nafion_literature_priors:
+  water_uptake:
+    zawodzinski_springer_vapour:
+      lambda_formula: "0.043 + 17.81*a_w - 39.85*a_w^2 + 36.0*a_w^3"
+      notes:
+        - "Vapour-equilibrated Nafion hydration number lambda = mol H2O per mol SO3-."
+        - "Used by Motupally et al. for Nafion water diffusion modelling."
+      reference_points:
+        - a_w: 0.5
+          lambda: 3.49
+        - a_w: 0.8
+          lambda: 7.22
+        - a_w: 1.0
+          lambda_vapour: 14.0
+      liquid_equilibrated_reference:
+        lambda_liquid_80C: 17.0
+        note: "Motupally et al. use lambda=17 on the liquid-water side at 80 C."
+
+    ludlam_2024_nafion117_salt_points:
+      notes:
+        - "Water uptake values are from the salt-solution reference table for Nafion 117."
+        - "lambda_approx assumes EW=1100 g/mol and M_w=18 g/mol."
+      points:
+        - RH_pct: 39
+          water_uptake_wt_pct: 7.7
+          lambda_approx: 4.7
+        - RH_pct: 47
+          water_uptake_wt_pct: 8.6
+          lambda_approx: 5.3
+        - RH_pct: 76
+          water_uptake_wt_pct: 13.1
+          lambda_approx: 8.0
+        - RH_pct: 100
+          water_uptake_wt_pct: 26.0
+          lambda_approx: 15.9
+
+  water_state:
+    parker_shah_2021:
+      notes:
+        - "INS/IR interpretation using TFSA hydrates as model compounds."
+        - "Low hydration: H3O+ dominated; higher hydration: H9O4+; saturated: H9O4+ plus unbound/bulk-like water."
+      hydration_states:
+        - condition: "vacuum oven 180 C"
+          water_content_wt_pct: 0.0
+          lambda: 0.0
+          dominant_state: "sulfonic acid groups"
+        - condition: "glovebox dried"
+          water_content_wt_pct: 1.51
+          lambda: 1.0
+          dominant_state: "H3O+"
+        - condition: "P2O5 dried"
+          water_content_wt_pct: 2.46
+          lambda: 1.6
+          dominant_state: "H3O+"
+        - condition: "MgCl2 dried"
+          water_content_wt_pct: 6.10
+          lambda: 4.0
+          dominant_state: "largely H9O4+"
+        - condition: "as received"
+          water_content_wt_pct: 7.33
+          lambda: 4.8
+          dominant_state: "largely H9O4+"
+        - condition: "soaked in water"
+          water_content_wt_pct: 19.39
+          lambda: 12.7
+          dominant_state: "H9O4+ plus unbound water"
+
+    ludlam_2024_thz_approx_bound_fraction_nafion117:
+      notes:
+        - "Approximate points read from Figure 4; use as qualitative prior only."
+        - "Nafion 117 bound/bulk crossover is around 60% RH."
+      points:
+        - RH_frac: 0.0
+          bound_fraction_approx: 0.84
+        - RH_frac: 0.10
+          bound_fraction_approx: 0.66
+        - RH_frac: 0.30
+          bound_fraction_approx: 0.56
+        - RH_frac: 0.50
+          bound_fraction_approx: 0.50
+        - RH_frac: 0.70
+          bound_fraction_approx: 0.44
+        - RH_frac: 0.88
+          bound_fraction_approx: 0.36
+
+  transport:
+    motupally_becker_weidner_2000:
+      temperature_C: 80
+      membrane: "Nafion 115"
+      membrane_thickness_cm: 0.015
+      active_area_cm2: 50
+      liquid_side_lambda: 17.0
+      limiting_flux_mol_cm2_s: 9.9e-6
+      limiting_flux_g_m2_h: 6415
+      interpretation: "Optimistic upper reference for liquid-water side to dry-N2 side at 80 C; not a direct AC vapour-vapour estimate."
+
+  sorption_heat:
+    default_sweep_kJ_per_kg_water:
+      - 2200
+      - 2431
+      - 2600
+      - 2800
+      - 3000
+    note: "Use q_sorp as a sweep until direct sorption-calorimetry values are extracted."
+    recommended_next_sources:
+      - "Wadso & Jannasch 2013, Water Vapor Sorption Thermodynamics of the Nafion Ionomer Membrane"
+      - "Reucroft/Rivin/Schneider sorption thermodynamics papers"
