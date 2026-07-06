@@ -1,0 +1,15 @@
+# Notes for Model 2.7 two-sided membrane runs.
+# The script reads the main process-air scenario from scenarios/first_model.yaml.
+# This file is only documentation for suggested sweeps.
+
+suggested_receiver_conditions:
+  receiver_T_C_values: [30, 35, 40]
+  receiver_RH_values: [0.2, 0.4, 0.6]
+  receiver_flow_ratios: [0.25, 0.5, 1, 2, 5]
+
+suggested_membrane_heat_parameters:
+  q_sorp_kJ_per_kg_water: [2200, 2431, 2600, 2800, 3000]
+  q_desorp_kJ_per_kg_water: "default: equal to q_sorp"
+  chi_sorp_to_process_air: [0, 0.25, 0.5, 0.75, 1]
+  eta_sorp_heat_to_desorp: [0, 0.5, 1]
+  chi_desorp_from_receiver_air: [0, 0.5, 1]
